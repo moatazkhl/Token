@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>بوابة استعلام المستفيدين - لجنة حي باب مصر</title>
+    
+    <!-- ============================================= -->
+    <!-- 🔥 إضافات PWA للجوال -->
+    <!-- ============================================= -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="باب مصر">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#074233">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    
+    <style>
+        :root {
+            --gov-green: #074233;
+            --gov-gold: #c5a059;
+            --bg-beige: #faf7f0;
+        }
+        
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-beige);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            align-items: center;
+        }
+        
+        .query-container {
+            background: white;
+            padding: 20px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            text-align: center;
+        }
+        
+        .logo {
+            color: var(--gov-green);
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 0;
+        }
+        
+        .subtitle {
+            font-size: 12px;
+            color: #666;
+            margin-top: -5px;
+            margin-bottom: 12px;
+        }
+        
+        .dua-box {
+            background: #f0f4f0;
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: #074233;
+            line-height: 1.8;
+            border-right: 4px solid var(--gov-gold);
+        }
+        
+        .slider-container {
+            width: 100%;
+            height: 140px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 14px;
+            border: 1px solid #dfd5be;
+            margin-bottom: 15px;
+            display: none;
+            background: #f9f6ef;
+        }
+        
+        .slider-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+        
+        .slider-container img.active {
+            opacity: 1;
+            position: relative;
+        }
+        
+        .input-group {
+            margin: 12px 0;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 2px solid #dfd5be;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            background: white;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--gov-green);
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: var(--gov-green);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            font-family: inherit;
+            transition: background 0.3s;
+        }
+        
+        button:hover:not(:disabled) {
+            background: #0a5a44;
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        #loadingText {
+            display: none;
+            color: var(--gov-green);
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .result-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 15px;
+            margin-top: 15px;
+            display: none;
+            text-align: right;
+            border: 1px solid #dfd5be;
+        }
+        
+        .result-card p {
+            margin: 6px 0;
+            font-size: 14px;
+        }
+        
+        .status-ready {
+            color: #16a34a;
+            font-weight: bold;
+        }
+        
+        .status-waiting {
+            color: #dc2626;
+            font-weight: bold;
+        }
+        
+        .fcm-notice {
+            font-size: 12px;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+        
+        .fcm-notice.info {
+            background: #fef9c3;
+            color: #854d0e;
+            display: block;
+        }
+        
+        .fcm-notice.success {
+            background: #dcfce7;
+            color: #166534;
+            display: block;
+        }
+        
+        .fcm-notice.error {
+            background: #fee2e2;
+            color: #991b1b;
+            display: block;
+        }
+        
+        .fcm-notice .retry-btn {
+            background: var(--gov-green);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 8px;
+            width: auto;
+        }
+        
+        .fcm-notice .retry-btn:hover {
+            background: #0a5a44;
+        }
+        
+        .fcm-notice .steps {
+            text-align: right;
+            padding-right: 20px;
+            font-size: 12px;
+            line-height: 2;
+        }
+        
+        #qrcode-canvas {
+            margin-top: 10px;
+            padding: 8px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-width: 100%;
+        }
+        
+        .token-status {
+            font-size: 12px;
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 8px;
+            display: none;
+        }
+        
+        .token-status.success {
+            background: #dcfce7;
+            color: #166534;
+            display: block;
+        }
+        
+        .token-status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            display: block;
+        }
+        
+        .token-status.info {
+            background: #e0f2fe;
+            color: #0369a1;
+            display: block;
+        }
+        
+        .debug-info {
+            font-size: 11px;
+            color: #666;
+            background: #f3f4f6;
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 10px;
+            text-align: left;
+            direction: ltr;
+            display: none;
+            word-break: break-all;
+            max-height: 80px;
+            overflow: auto;
+        }
+        
+        .footer-note {
+            font-size: 10px;
+            color: #999;
+            margin-top: 12px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+        
+        .mobile-tip {
+            background: #e0f2fe;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 12px;
+            color: #0369a1;
+            display: none;
+        }
+        
+        .pwa-install-btn {
+            background: #16a34a;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .pwa-install-btn:hover {
+            background: #15803d;
+        }
+        
+        @media (max-width: 480px) {
+            .query-container {
+                padding: 15px;
+            }
+            .logo {
+                font-size: 20px;
+            }
+            select, input, button {
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+    </style>
+    
+    <!-- Firebase SDK (Version 8.10.1) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+</head>
+<body>
+
+<div class="query-container">
+    <h1 class="logo">استعلام المستحقين 📋</h1>
+    <p class="subtitle">لجنة حي باب مصر الرقمية</p>
+    
+    <div class="dua-box">
+        🤲 أسأل الله أن يهبك تعظيم الإيمان<br>
+        وعافية الأبدان ورضا الرحمن
+    </div>
+    
+    <!-- تنبيه الجوال -->
+    <div class="mobile-tip" id="mobileTip">
+        📱 للتشغيل على الجوال، استخدم Chrome وأضف الموقع إلى الشاشة الرئيسية
+    </div>
+    
+    <!-- زر تثبيت PWA -->
+    <button class="pwa-install-btn" id="pwaInstallBtn">
+        📲 تثبيت التطبيق على جهازك
+    </button>
+    
+    <div id="announcementSlider" class="slider-container"></div>
+
+    <div class="input-group">
+        <select id="searchNode">
+            <option value="gas_queue">⛽ طابور توزيع الغاز</option>
+            <option value="petrol_queue">🚗 طابور توزيع البنزين</option>
+            <option value="food_queue">📦 طابور السلة الغذائية</option>
+        </select>
+        <input type="number" id="searchNid" placeholder="أدخل الرقم الوطني (11 رقم)...">
+        <button id="btnSearch">🔍 بحث عن الحالة</button>
+    </div>
+    
+    <div id="fcmNotice" class="fcm-notice info">⏳ جاري تهيئة الإشعارات...</div>
+    <div id="loadingText">⏳ جاري الفحص...</div>
+    <div id="tokenStatus" class="token-status"></div>
+    <div id="debugInfo" class="debug-info"></div>
+    
+    <div id="resultCard" class="result-card">
+        <p>👤 <strong>اسم المستفيد:</strong> <span id="resName"></span></p>
+        <p>🗂️ <strong>رقم البطاقة:</strong> <span id="resCard"></span></p>
+        <p>🔔 <strong>الحالة:</strong> <span id="resStatus"></span></p>
+        <div id="qrSection" style="text-align: center; margin-top: 12px; display: none; border-top: 2px dashed #dfd5be; padding-top: 10px;">
+            <p style="color:var(--gov-green); font-weight: bold; font-size: 13px;">🎫 رمز إثبات الاستحقاق</p>
+            <canvas id="qrcode-canvas"></canvas>
+        </div>
+    </div>
+    
+    <div class="footer-note">© لجنة حي باب مصر - جميع الحقوق محفوظة</div>
+</div>
+
+<script>
+    // =============================================
+    // 1️⃣ إعدادات Firebase
+    // =============================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyAiHt72bzvFw8tzEPsj9uKbgWBEJGkoijU",
+        authDomain: "talabat-e67b7.firebaseapp.com",
+        databaseURL: "https://talabat-e67b7-default-rtdb.firebaseio.com",
+        projectId: "talabat-e67b7",
+        storageBucket: "talabat-e67b7.firebasestorage.app",
+        messagingSenderId: "616225099801",
+        appId: "1:616225099801:web:7bb54e74c6c82994959a88"
+    };
+    
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const database = firebase.database();
+
+    // =============================================
+    // 2️⃣ كشف الجوال و PWA
+    // =============================================
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isChrome = /Chrome/.test(navigator.userAgent);
+    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    
+    if (isMobile) {
+        document.getElementById('mobileTip').style.display = 'block';
+        if (!isChrome && !isSafari) {
+            document.getElementById('mobileTip').innerHTML = '⚠️ يرجى استخدام متصفح Chrome أو Safari للحصول على أفضل تجربة';
+        }
+    }
+    
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('pwaInstallBtn').style.display = 'block';
+    });
+    
+    document.getElementById('pwaInstallBtn').addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const result = await deferredPrompt.userChoice;
+            if (result.outcome === 'accepted') {
+                document.getElementById('pwaInstallBtn').style.display = 'none';
+            }
+            deferredPrompt = null;
+        }
+    });
+
+    // =============================================
+    // 3️⃣ السلايدر
+    // =============================================
+    function loadSlider() {
+        const container = document.getElementById('announcementSlider');
+        database.ref('announcements').once('value').then(snapshot => {
+            if (snapshot.exists()) {
+                const images = snapshot.val();
+                let html = '';
+                let index = 0;
+                for (let key in images) {
+                    const active = index === 0 ? 'active' : '';
+                    html += `<img src="${images[key]}" class="${active}" alt="إعلان">`;
+                    index++;
+                }
+                container.innerHTML = html;
+                container.style.display = 'block';
+                startSlider();
+            }
+        }).catch(err => console.log('⚠️ خطأ في السلايدر:', err));
+    }
+
+    function startSlider() {
+        const images = document.querySelectorAll('#announcementSlider img');
+        if (images.length <= 1) return;
+        let current = 0;
+        setInterval(() => {
+            images[current].classList.remove('active');
+            current = (current + 1) % images.length;
+            images[current].classList.add('active');
+        }, 4000);
+    }
+    loadSlider();
+
+    // =============================================
+    // 4️⃣ نظام الإشعارات للجوال (بدون VAPID وهمي لتجنب الأخطاء)
+    // =============================================
+    let messagingInstance = null;
+    let isInitialized = false;
+
+    async function initMobileNotifications() {
+        const notice = document.getElementById('fcmNotice');
+        const status = document.getElementById('tokenStatus');
+        const debug = document.getElementById('debugInfo');
+        
+        if (isInitialized && window.fcmToken) {
+            return window.fcmToken;
+        }
+        
+        try {
+            if (!('Notification' in window)) {
+                notice.className = 'fcm-notice error';
+                notice.textContent = '❌ المتصفح لا يدعم الإشعارات';
+                return null;
+            }
+
+            if (!firebase.messaging || !firebase.messaging.isSupported()) {
+                notice.className = 'fcm-notice error';
+                notice.textContent = '❌ Firebase Messaging غير مدعوم في هذا المتصفح';
+                return null;
+            }
+
+            messagingInstance = firebase.messaging();
+
+            // تسجيل Service Worker
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    let swExists = false;
+                    
+                    for (const reg of registrations) {
+                        if (reg.active && reg.active.scriptURL.includes('firebase-messaging-sw.js')) {
+                            swExists = true;
+                            await messagingInstance.useServiceWorker(reg);
+                            break;
+                        }
+                    }
+                    
+                    if (!swExists) {
+                        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                        await messagingInstance.useServiceWorker(registration);
+                    }
+                } catch (err) {
+                    console.log('⚠️ Service Worker Error:', err.message);
+                }
+            }
+
+            let permission = Notification.permission;
+            
+            if (permission === 'denied') {
+                notice.className = 'fcm-notice error';
+                notice.innerHTML = `
+                    ⚠️ الإشعارات مرفوضة من المتصفح
+                    <br><br>
+                    <div class="steps">
+                        <strong>📌 كيفية السماح:</strong><br>
+                        1️⃣ اضغط على 🔒 بجانب الرابط<br>
+                        2️⃣ اختر إعدادات الموقع<br>
+                        3️⃣ غيّر الإشعارات إلى "السماح" ثم أعد تحميل الصفحة
+                    </div>
+                `;
+                status.textContent = '❌ مرفوض';
+                status.className = 'token-status error';
+                return null;
+            }
+
+            if (permission === 'default') {
+                notice.className = 'fcm-notice info';
+                notice.textContent = '⏳ جاري طلب إذن الإشعارات...';
+                permission = await Notification.requestPermission();
+            }
+
+            if (permission !== 'granted') {
+                notice.className = 'fcm-notice error';
+                notice.textContent = '⚠️ تم رفض إذن الإشعارات';
+                return null;
+            }
+
+            // جلب التوكن بالطريقة القياسية الصحيحة
+            let token = null;
+            try {
+                token = await messagingInstance.getToken();
+            } catch (e) {
+                console.error('⚠️ خطأ استخراج التوكن:', e.message);
+            }
+
+            if (!token) {
+                notice.className = 'fcm-notice error';
+                notice.textContent = '⚠️ فشل استخراج رمز الإشعارات (Token)';
+                return null;
+            }
+
+            debug.style.display = 'block';
+            debug.textContent = `📱 Token: ${token}`;
+            
+            notice.className = 'fcm-notice success';
+            notice.textContent = '✅ الإشعارات جاهزة';
+            status.textContent = '✅ الإشعارات مفعلة';
+            status.className = 'token-status success';
+            
+            window.fcmToken = token;
+            isInitialized = true;
+            
+            return token;
+
+        } catch (error) {
+            console.error('❌ خطأ في الإشعارات:', error);
+            notice.className = 'fcm-notice error';
+            notice.textContent = '⚠️ خطأ: ' + error.message;
+            return null;
+        }
+    }
+
+    // =============================================
+    // 5️⃣ حفظ التوكن في قاعدة البيانات
+    // =============================================
+    async function saveTokenToDB(node, nationalId, token) {
+        try {
+            if (!token) return false;
+            
+            const nameSnap = await database.ref(`${node}/${nationalId}/name`).once('value');
+            const userName = nameSnap.val() || 'مستفيد';
+
+            await database.ref(`${node}/${nationalId}`).update({
+                fcmToken: token,
+                fcmTokenUpdated: Date.now(),
+                deviceType: isMobile ? 'mobile' : 'desktop'
+            });
+
+            await database.ref(`fcm_tokens/${nationalId}`).set({
+                token: token,
+                node: node,
+                name: userName,
+                nationalId: nationalId,
+                deviceType: isMobile ? 'mobile' : 'desktop',
+                updatedAt: Date.now()
+            });
+
+            console.log('✅ تم حفظ التوكن في قاعدة البيانات بنجاح');
+            return true;
+        } catch (error) {
+            console.error('❌ فشل حفظ التوكن:', error);
+            return false;
+        }
+    }
+
+    // =============================================
+    // 6️⃣ وظيفة البحث الرئيسية وحفظ التوكن
+    // =============================================
+    document.getElementById('btnSearch').addEventListener('click', async function() {
+        const node = document.getElementById('searchNode').value;
+        const nid = document.getElementById('searchNid').value.trim();
+        const loading = document.getElementById('loadingText');
+        const result = document.getElementById('resultCard');
+        const btn = this;
+
+        if (nid.length !== 11) {
+            alert('❌ الرقم الوطني يجب أن يكون 11 رقم');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = '⏳ جاري البحث...';
+        loading.style.display = 'block';
+        loading.textContent = '⏳ جاري الفحص...';
+        result.style.display = 'none';
+        document.getElementById('qrSection').style.display = 'none';
+
+        try {
+            // 1. التحقق من حالة البوابة
+            const activeSnap = await database.ref('system_settings/query_active').once('value');
+            const isActive = activeSnap.val();
+            
+            if (isActive !== true && isActive !== 'true') {
+                loading.style.display = 'none';
+                alert('🔒 بوابة الاستعلام مغلقة حالياً');
+                btn.disabled = false;
+                btn.textContent = '🔍 بحث عن الحالة';
+                return;
+            }
+
+            // 2. فحص وجود الرقم
+            loading.textContent = '⏳ جلب البيانات...';
+            const userSnap = await database.ref(`${node}/${nid}`).once('value');
+            loading.style.display = 'none';
+
+            if (!userSnap.exists()) {
+                alert('❌ الرقم غير مسجل في هذه الفئة');
+                btn.disabled = false;
+                btn.textContent = '🔍 بحث عن الحالة';
+                return;
+            }
+
+            const data = userSnap.val();
+
+            // 3. عرض النتيجة
+            document.getElementById('resName').textContent = data.name || 'غير متوفر';
+            document.getElementById('resCard').textContent = data.familyCard || 'غير متوفر';
+            
+            const statusSpan = document.getElementById('resStatus');
+            statusSpan.textContent = data.status || 'بانتظار الدور';
+            
+            if (data.status && data.status.includes('مستحق')) {
+                statusSpan.className = 'status-ready';
+                
+                const label = node === 'gas_queue' ? 'الغاز' : 
+                             node === 'petrol_queue' ? 'البنزين' : 'السلة الغذائية';
+                
+                const qrText = `المادة: ${label}\nالمستفيد: ${data.name}\nالرقم: ${nid}\nالبطاقة: ${data.familyCard}\nالحالة: مستحق`;
+                
+                new QRious({
+                    element: document.getElementById('qrcode-canvas'),
+                    value: qrText,
+                    size: 200,
+                    background: '#ffffff',
+                    foreground: '#074233',
+                    level: 'H'
+                });
+                
+                document.getElementById('qrSection').style.display = 'block';
+            } else {
+                statusSpan.className = 'status-waiting';
+            }
+            
+            result.style.display = 'block';
+
+            // 4. تفعيل الإشعارات وحفظ التوكن تلقائياً عند الضغط على بحث
+            const token = await initMobileNotifications();
+            if (token) {
+                await saveTokenToDB(node, nid, token);
+                document.getElementById('tokenStatus').textContent = '✅ تم ربط وحفظ رمز الإشعارات';
+                document.getElementById('tokenStatus').className = 'token-status success';
+            }
+
+        } catch (error) {
+            loading.style.display = 'none';
+            alert('❌ خطأ: ' + error.message);
+        }
+
+        btn.disabled = false;
+        btn.textContent = '🔍 بحث عن الحالة';
+    });
+
+    // التهيئة التلقائية البسيطة عند التحميل
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            initMobileNotifications().catch(console.log);
+        }, 1500);
+    });
+</script>
+</body>
+</html>
